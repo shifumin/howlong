@@ -74,19 +74,3 @@ Records data stays in `localStorage` on the device only. iOS may rarely clear
 1. Open https://shifumin.github.io/timeboxing/ in Safari
 2. Share → **Add to Home Screen**
 3. Launch from the home-screen icon — it runs full-screen like a native app
-
-## Deploy (automatic)
-
-Deployment is automated by GitHub Actions. On every push to `main`, the workflow
-in `.github/workflows/deploy.yml`:
-
-1. installs dependencies (`npm ci`),
-2. compiles `app.ts` → `app.js` (`npm run build`),
-3. assembles the static site and publishes it to GitHub Pages.
-
-So the only thing you do is **edit `app.ts` and push** — the compiled site appears
-at `https://<username>.github.io/timeboxing/` (HTTPS) a minute later.
-
-One-time setup (already done for this repo): the repository is **public** (free
-GitHub Pages requires it) and **Settings → Pages → Source** is set to
-**GitHub Actions**.
