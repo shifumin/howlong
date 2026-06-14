@@ -6,8 +6,6 @@ see the average / median time at a glance.
 
 No server. The app is a single `index.html` (inline CSS) plus one script
 (`app.js`) that stores everything in the browser's `localStorage` on your device.
-The script is written in **TypeScript** (`app.ts`) and compiled to `app.js`;
-GitHub Actions builds and deploys it to GitHub Pages on every push.
 
 ## Features
 
@@ -90,8 +88,3 @@ at `https://<username>.github.io/timeboxing/` (HTTPS) a minute later.
 One-time setup (already done for this repo): the repository is **public** (free
 GitHub Pages requires it) and **Settings → Pages → Source** is set to
 **GitHub Actions**.
-
-## Privacy
-
-The repository contains code only. Activity records live solely in your device's
-`localStorage` and are never transmitted to GitHub or any server.

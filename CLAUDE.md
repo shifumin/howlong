@@ -26,7 +26,6 @@ After building, open `index.html` (via a local server) to test in a browser.
 Push to `main` → GitHub Actions (`.github/workflows/deploy.yml`) compiles
 `app.ts` and publishes to GitHub Pages at <https://shifumin.github.io/timeboxing/>.
 
-- **Do not** build or commit `app.js` for deployment — CI does it.
 - Pages **Source** is set to **GitHub Actions** (not "deploy from a branch").
 - The repo must stay **public** (free GitHub Pages requirement).
 - After a deploy, reload the site to pick it up (the Service Worker serves the
@@ -43,8 +42,8 @@ Push to `main` → GitHub Actions (`.github/workflows/deploy.yml`) compiles
 
 | File | Role |
 |------|------|
-| `app.ts` | App source (TypeScript). **Edit this.** |
-| `app.js` | Compiled output. Generated, git-ignored. Do not edit. |
+| `app.ts` | App source (TypeScript). |
+| `app.js` | Compiled output (generated from `app.ts`, git-ignored). |
 | `index.html` | Markup + inline CSS; loads `app.js`. |
 | `sw.js` | Service Worker (network-first HTML, cache-first assets). |
 | `manifest.json` / `icons/` | PWA shell. |
