@@ -65,6 +65,9 @@ git-ignored — you only ever commit `app.ts`; the build happens in CI.
 }
 ```
 
+The order of the `activities` array is the display order (the ▲▼ buttons reorder
+the array; there is no separate order field).
+
 Records data stays in `localStorage` on the device only. iOS may rarely clear
 `localStorage`, so **JSON export is the backup mechanism**.
 
