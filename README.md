@@ -56,7 +56,7 @@ git-ignored — you only ever commit `app.ts`; the build happens in CI.
   "activities": [
     {
       "id": "a...",
-      "name": "入浴",
+      "name": "夕食",
       "plannedMinutes": 20,
       "records": [
         { "start": "2026-05-31T22:00", "end": "2026-05-31T22:22", "minutes": 22 }
