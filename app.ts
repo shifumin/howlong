@@ -7,7 +7,7 @@ interface RecordItem {
   end: string;
   minutes: number;
 }
-// 1つの活動（入浴・夕食など）
+// 1つの活動（夕食など）
 interface Activity {
   id: string;
   name: string;
