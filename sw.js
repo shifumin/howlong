@@ -1,5 +1,5 @@
-// timeboxing service worker — network-first HTML, cache-first assets
-const CACHE = "timeboxing-v2";
+// howlong service worker — network-first HTML, cache-first assets
+const CACHE = "howlong-v2";
 const ASSETS = [
   "./",
   "./index.html",

@@ -32,7 +32,7 @@ interface Stats {
   latest: number | null;
 }
 
-const STORAGE_KEY = "timeboxing.v1";
+const STORAGE_KEY = "howlong.v1";
 
 // 要素取得ヘルパー。<T> で取りたい要素の型を指定できる（既定は HTMLElement）
 function $<T extends Element = HTMLElement>(sel: string, el: ParentNode = document): T {
@@ -254,7 +254,7 @@ function exportJSON(): void {
   const d = new Date();
   const p = (n: number) => String(n).padStart(2, "0");
   a.href = url;
-  a.download = `timeboxing-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}.json`;
+  a.download = `howlong-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}.json`;
   document.body.appendChild(a);
   a.click();
   a.remove();

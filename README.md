@@ -1,6 +1,6 @@
-# timeboxing
+# howlong
 
-**App: https://shifumin.github.io/timeboxing/**
+**App: https://shifumin.github.io/howlong/**
 
 A personal time-tracking PWA for everyday activities. Record the start/end of an
 activity (bath, dinner, …) with one tap, see the average / median time at a glance,
@@ -72,6 +72,6 @@ Records data stays in `localStorage` on the device only. iOS may rarely clear
 
 ## Usage on iPhone
 
-1. Open https://shifumin.github.io/timeboxing/ in Safari
+1. Open https://shifumin.github.io/howlong/ in Safari
 2. Share → **Add to Home Screen**
 3. Launch from the home-screen icon — it runs full-screen like a native app

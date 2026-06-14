@@ -1,6 +1,6 @@
 {
-  "name": "timeboxing — タイムトラッキング",
-  "short_name": "timeboxing",
+  "name": "howlong — タイムトラッキング",
+  "short_name": "howlong",
   "description": "日常の活動の開始/終了を記録し、平均・中央値を把握する個人用タイムトラッキングアプリ",
   "start_url": "./index.html",
   "scope": "./",

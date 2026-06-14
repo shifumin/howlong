@@ -25,7 +25,7 @@ After building, open `index.html` (via a local server) to test in a browser.
 ## Deploy
 
 Push to `main` → GitHub Actions (`.github/workflows/deploy.yml`) compiles
-`app.ts` and publishes to GitHub Pages at <https://shifumin.github.io/timeboxing/>.
+`app.ts` and publishes to GitHub Pages at <https://shifumin.github.io/howlong/>.
 
 - Pages **Source** is set to **GitHub Actions** (not "deploy from a branch").
 - The repo must stay **public** (free GitHub Pages requirement).
