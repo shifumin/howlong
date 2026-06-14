@@ -126,12 +126,14 @@ function updateRunningBanner(): void {
   const running = state.running;
   if (!running) {
     banner.classList.remove("show");
+    document.body.classList.remove("running");
     stopTimerLoop();
     return;
   }
   const act = state.activities.find((a) => a.id === running.activityId);
-  if (!act) { state.running = null; save(); banner.classList.remove("show"); stopTimerLoop(); return; }
+  if (!act) { state.running = null; save(); banner.classList.remove("show"); document.body.classList.remove("running"); stopTimerLoop(); return; }
   banner.classList.add("show");
+  document.body.classList.add("running");
   $("#rbName").textContent = act.name + " を計測中";
   const sec = Math.max(0, Math.floor((Date.now() - running.start) / 1000));
   const h = Math.floor(sec / 3600);

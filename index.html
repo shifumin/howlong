@@ -85,16 +85,24 @@
   /* running banner */
   #runningBanner {
     display: none;
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: calc(env(safe-area-inset-bottom) + 12px);
+    width: min(608px, calc(100% - 32px));
+    box-sizing: border-box;
     background: var(--accent);
     color: #fff;
     border-radius: var(--radius);
-    padding: 16px 18px;
-    margin-bottom: 16px;
+    padding: 14px 18px;
     align-items: center;
     justify-content: space-between;
-    box-shadow: var(--shadow);
+    box-shadow: 0 8px 28px rgba(0,0,0,.32);
+    z-index: 40;
   }
   #runningBanner.show { display: flex; }
+  /* reserve space so the last card isn't hidden behind the fixed bar */
+  body.running { padding-bottom: calc(env(safe-area-inset-bottom) + 116px); }
   #runningBanner .rb-name { font-weight: 600; font-size: 16px; }
   #runningBanner .rb-time { font-size: 30px; font-variant-numeric: tabular-nums; letter-spacing: .02em; font-weight: 300; }
   #runningBanner button { background: rgba(255,255,255,.22); color: #fff; }
