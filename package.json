@@ -1,7 +1,7 @@
 {
   "name": "timeboxing",
   "version": "1.0.0",
-  "description": "A personal time-tracking PWA combining timeboxing and timeblocking",
+  "description": "A personal time-tracking PWA for everyday activities: record durations, see average/median, set a planned time",
   "private": true,
   "scripts": {
     "build": "tsc",

@@ -1,7 +1,8 @@
 # CLAUDE.md
 
-A personal time-tracking PWA (timeboxing + timeblocking). Single `index.html`
-(inline CSS) + a TypeScript script, deployed to GitHub Pages via GitHub Actions.
+A personal time-tracking PWA for everyday activities (record durations, see
+average/median, set a planned time). Single `index.html` (inline CSS) + a
+TypeScript script, deployed to GitHub Pages via GitHub Actions.
 
 ## ⚠️ Edit `app.ts`, never `app.js`
 

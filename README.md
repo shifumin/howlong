@@ -2,9 +2,9 @@
 
 **App: https://shifumin.github.io/timeboxing/**
 
-A personal time-tracking PWA that combines **timeboxing** and **timeblocking**.
-Record the start/end of everyday activities (bath, dinner, …) with one tap, and
-see the average / median time at a glance.
+A personal time-tracking PWA for everyday activities. Record the start/end of an
+activity (bath, dinner, …) with one tap, see the average / median time at a glance,
+and set a planned time to aim for.
 
 No server. The app is a single `index.html` (inline CSS) plus one script
 (`app.js`) that stores everything in the browser's `localStorage` on your device.
