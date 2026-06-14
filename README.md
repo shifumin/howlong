@@ -12,8 +12,8 @@ No server. The app is a single `index.html` (inline CSS) plus one script
 ## Features
 
 - **Activities** — add an activity once, reuse it from then on
-- **Reorder & rename** — move activities up/down with ▲▼ buttons (works on iPhone
-  touch) and rename them; the display order is saved
+- **Reorder, rename & delete** — move activities up/down with ▲▼ buttons (works on
+  iPhone touch), rename or delete them; the display order is saved
 - **Start / Stop timer** — one running activity at a time (exclusive). A live timer
   shows the elapsed time; closing the tab does not reset it (the start time is kept
   in `localStorage` so measurement continues)
@@ -23,7 +23,6 @@ No server. The app is a single `index.html` (inline CSS) plus one script
 - **History** — a tidy, stats-first view by default; expand to see every record, and
   edit / delete / manually add records (for missed or mistaken taps)
 - **JSON export / import** — back up or restore all data as a dated JSON file
-- **Quota handling** — `QuotaExceededError` is caught and prompts an export
 
 All time values are in **minutes**.
 
