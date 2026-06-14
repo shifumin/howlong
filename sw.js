@@ -1,4 +1,4 @@
-// timebox service worker — offline shell cache
+// timeboxing service worker — offline shell cache
 const CACHE = "timeboxing-v1";
 const ASSETS = [
   "./",

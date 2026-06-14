@@ -162,7 +162,7 @@
 </head>
 <body>
 <header>
-  <h1>timebox</h1>
+  <h1>timeboxing</h1>
   <div class="header-actions">
     <button class="icon" id="exportBtn" title="エクスポート">⬇ 書出</button>
     <button class="icon" id="importBtn" title="インポート">⬆ 取込</button>
@@ -309,7 +309,7 @@ function stopActivity() {
   const endMs = Date.now();
   state.running = null;
   if (act) {
-    const minutes = Math.max(0, Math.round((endMs - startMs) / 60000));
+    const minutes = Math.max(1, Math.round((endMs - startMs) / 60000));
     act.records.push({ start: toLocalMinuteISO(startMs), end: toLocalMinuteISO(endMs), minutes });
   }
   save();
@@ -346,7 +346,7 @@ function addManualRecord(id, dateISO, minutes) {
   const act = state.activities.find((a) => a.id === id);
   if (!act) return false;
   const min = parseInt(minutes, 10);
-  if (isNaN(min) || min < 0) { toast("分を正しく入力してください"); return false; }
+  if (isNaN(min) || min < 1) { toast("分は1以上で入力してください"); return false; }
   const startMs = parseLocalISO(dateISO);
   const start = isNaN(startMs) ? localMinuteISONow() : dateISO;
   const sMs = parseLocalISO(start);
@@ -359,7 +359,7 @@ function updateRecordMinutes(id, idx, minutes) {
   const act = state.activities.find((a) => a.id === id);
   if (!act || !act.records[idx]) return;
   const min = parseInt(minutes, 10);
-  if (isNaN(min) || min < 0) return;
+  if (isNaN(min) || min < 1) return;
   const rec = act.records[idx];
   rec.minutes = min;
   const sMs = parseLocalISO(rec.start);
@@ -384,7 +384,7 @@ function exportJSON() {
   const d = new Date();
   const p = (n) => String(n).padStart(2, "0");
   a.href = url;
-  a.download = `timebox-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}.json`;
+  a.download = `timeboxing-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}.json`;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -402,7 +402,7 @@ function importJSON(file) {
         name: String(a.name || "無名"),
         plannedMinutes: (typeof a.plannedMinutes === "number" && a.plannedMinutes > 0) ? a.plannedMinutes : null,
         records: Array.isArray(a.records) ? a.records.filter((r) => r && typeof r.minutes === "number").map((r) => ({
-          start: r.start || "", end: r.end || "", minutes: Math.max(0, Math.round(r.minutes)),
+          start: r.start || "", end: r.end || "", minutes: Math.max(1, Math.round(r.minutes)),
         })) : [],
       }));
       if (!confirm(`${activities.length}件の活動を読み込み、現在のデータを置き換えます。よろしいですか？`)) return;
@@ -542,7 +542,7 @@ function renderHistory(el, act) {
   manual.className = "manual-row";
   manual.innerHTML = `
     <input class="date" type="datetime-local" value="${localMinuteISONow()}">
-    <input class="min" type="number" min="0" inputmode="numeric" placeholder="分">
+    <input class="min" type="number" min="1" inputmode="numeric" placeholder="分">
     <button class="ghost addrec">手入力で追加</button>
   `;
   $(".addrec", manual).onclick = () => {
