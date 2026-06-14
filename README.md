@@ -12,6 +12,8 @@ GitHub Actions builds and deploys it to GitHub Pages on every push.
 ## Features
 
 - **Activities** — add an activity once, reuse it from then on
+- **Reorder & rename** — move activities up/down with ▲▼ buttons (works on iPhone
+  touch) and rename them; the display order is saved
 - **Start / Stop timer** — one running activity at a time (exclusive). A live timer
   shows the elapsed time; closing the tab does not reset it (the start time is kept
   in `localStorage` so measurement continues)

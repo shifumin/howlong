@@ -174,6 +174,28 @@ function addActivity(name: string): void {
   save();
   render();
 }
+function moveActivity(id: string, dir: number): void {
+  const i = state.activities.findIndex((a) => a.id === id);
+  if (i < 0) return;
+  const j = i + dir;
+  if (j < 0 || j >= state.activities.length) return;
+  const arr = state.activities;
+  const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+  save();
+  render();
+}
+function renameActivity(id: string): void {
+  const act = state.activities.find((a) => a.id === id);
+  if (!act) return;
+  const v = prompt("活動の名前を変更", act.name);
+  if (v === null) return;
+  const name = v.trim();
+  if (!name) { toast("名前を入力してください"); return; }
+  if (state.activities.some((a) => a.id !== id && a.name === name)) { toast("同じ名前の活動があります"); return; }
+  act.name = name;
+  save();
+  render();
+}
 function deleteActivity(id: string): void {
   state.activities = state.activities.filter((a) => a.id !== id);
   if (state.running && state.running.activityId === id) { state.running = null; stopTimerLoop(); }
@@ -291,7 +313,11 @@ function render(): void {
     return;
   }
 
-  for (const act of state.activities) {
+  const activities = state.activities;
+  for (let idx = 0; idx < activities.length; idx++) {
+    const act = activities[idx];
+    const isFirst = idx === 0;
+    const isLast = idx === activities.length - 1;
     const st = statsOf(act);
     const over = act.plannedMinutes != null && st.avg != null && st.avg > act.plannedMinutes;
     const card = document.createElement("div");
@@ -307,7 +333,12 @@ function render(): void {
           <div class="name"></div>
           <div class="planned">${plannedLabel}${over ? ' <span style="color:var(--danger)">⚠ 平均が予定超過</span>' : ''}</div>
         </div>
-        <button class="subtle del" title="活動を削除">🗑</button>
+        <div class="head-actions">
+          <button class="subtle up" title="上へ移動">▲</button>
+          <button class="subtle down" title="下へ移動">▼</button>
+          <button class="subtle rename" title="名前を変更">✏️</button>
+          <button class="subtle del" title="活動を削除">🗑</button>
+        </div>
       </div>
       <div class="stats">
         <div class="stat ${over ? 'warn' : ''}"><div class="v">${fmtMin(st.avg)}</div><div class="l">平均</div></div>
@@ -323,6 +354,14 @@ function render(): void {
       <div class="history" hidden></div>
     `;
     $(".name", card).textContent = act.name;
+
+    const upBtn = $<HTMLButtonElement>(".up", card);
+    upBtn.disabled = isFirst;
+    upBtn.onclick = () => moveActivity(act.id, -1);
+    const downBtn = $<HTMLButtonElement>(".down", card);
+    downBtn.disabled = isLast;
+    downBtn.onclick = () => moveActivity(act.id, 1);
+    $(".rename", card).onclick = () => renameActivity(act.id);
 
     const startBtn = $<HTMLButtonElement>(".start", card);
     startBtn.disabled = !!state.running;
