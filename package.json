@@ -1,0 +1,13 @@
+{
+  "name": "timeboxing",
+  "version": "1.0.0",
+  "description": "A personal time-tracking PWA combining timeboxing and timeblocking",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}
