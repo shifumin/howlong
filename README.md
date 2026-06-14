@@ -1,5 +1,7 @@
 # timeboxing
 
+**App: https://shifumin.github.io/timeboxing/**
+
 A personal time-tracking PWA that combines **timeboxing** and **timeblocking**.
 Record the start/end of everyday activities (bath, dinner, …) with one tap, and
 see the average / median time at a glance.
@@ -69,7 +71,7 @@ Records data stays in `localStorage` on the device only. iOS may rarely clear
 
 ## Usage on iPhone
 
-1. Open the published URL (see below) in Safari
+1. Open https://shifumin.github.io/timeboxing/ in Safari
 2. Share → **Add to Home Screen**
 3. Launch from the home-screen icon — it runs full-screen like a native app
 
