@@ -1,5 +1,5 @@
-// timeboxing service worker — offline shell cache
-const CACHE = "timeboxing-v1";
+// timeboxing service worker — network-first HTML, cache-first assets
+const CACHE = "timeboxing-v2";
 const ASSETS = [
   "./",
   "./index.html",
@@ -22,10 +22,40 @@ self.addEventListener("activate", (e) => {
   );
 });
 
-// cache-first for app shell, network fallback
 self.addEventListener("fetch", (e) => {
-  if (e.request.method !== "GET") return;
+  const req = e.request;
+  if (req.method !== "GET") return;
+
+  // Network-first for the HTML document so a new deploy shows up on reload
+  // (the whole app — CSS + JS — is inline in index.html). Falls back to cache
+  // when offline, keeping the app usable without a connection.
+  const isHTML =
+    req.mode === "navigate" ||
+    req.destination === "document" ||
+    (req.headers.get("accept") || "").includes("text/html");
+
+  if (isHTML) {
+    e.respondWith(
+      fetch(req)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put("./index.html", copy));
+          return res;
+        })
+        .catch(() => caches.match(req).then((hit) => hit || caches.match("./index.html")))
+    );
+    return;
+  }
+
+  // Cache-first for other static assets (icons, manifest), network fallback.
   e.respondWith(
-    caches.match(e.request).then((hit) => hit || fetch(e.request).catch(() => caches.match("./index.html")))
+    caches.match(req).then((hit) =>
+      hit ||
+      fetch(req).then((res) => {
+        const copy = res.clone();
+        caches.open(CACHE).then((c) => c.put(req, copy));
+        return res;
+      })
+    )
   );
 });
