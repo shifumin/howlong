@@ -6,6 +6,11 @@ A personal time-tracking PWA for everyday activities. Record the start/end of an
 activity (bath, dinner, …) with one tap, see the average / median time at a glance,
 and set a planned time to aim for.
 
+<p align="center">
+  <img src="docs/screenshot.png" alt="howlong running on iPhone" width="300"><br>
+  <em>Record how long everyday activities take — see the average &amp; median at a glance.</em>
+</p>
+
 No server. The app is a single `index.html` (inline CSS) plus one script
 (`app.js`) that stores everything in the browser's `localStorage` on your device.
 
