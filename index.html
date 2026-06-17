@@ -168,6 +168,12 @@
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  footer { text-align: center; margin: 32px 0 12px; }
+  footer a {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--sub); font-size: 13px; text-decoration: none; opacity: .8;
+  }
+  footer a:hover { color: var(--accent); opacity: 1; }
 </style>
 </head>
 <body>
@@ -195,6 +201,12 @@
   </form>
 
   <div id="list"></div>
+
+  <footer>
+    <a href="https://github.com/shifumin/howlong" target="_blank" rel="noopener noreferrer">
+      <span aria-hidden="true">&lt;/&gt;</span> View on GitHub
+    </a>
+  </footer>
 </div>
 
 <div class="toast" id="toast"></div>
