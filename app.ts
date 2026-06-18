@@ -152,6 +152,7 @@ function startActivity(id: string): void {
 function stopActivity(): void {
   const running = state.running;
   if (!running) return;
+  disarmCancel();
   const act = state.activities.find((a) => a.id === running.activityId);
   const startMs = running.start;
   const endMs = Date.now();
@@ -165,6 +166,35 @@ function stopActivity(): void {
   updateRunningBanner();
   render();
   if (act) toast("記録しました");
+}
+
+// 計測の取り消し（記録を残さない）。誤タップ防止に2段階確認。
+let cancelArmed = false;
+let cancelArmTimer: number | null = null;
+function disarmCancel(): void {
+  cancelArmed = false;
+  if (cancelArmTimer) { clearTimeout(cancelArmTimer); cancelArmTimer = null; }
+  const btn = $("#cancelBtn");
+  btn.classList.remove("armed");
+  btn.textContent = "やめる";
+}
+function cancelActivity(): void {
+  if (!state.running) return;
+  if (!cancelArmed) {
+    cancelArmed = true;
+    const btn = $("#cancelBtn");
+    btn.classList.add("armed");
+    btn.textContent = "本当にやめる？";
+    cancelArmTimer = window.setTimeout(disarmCancel, 3000);
+    return;
+  }
+  disarmCancel();
+  state.running = null;
+  save();
+  stopTimerLoop();
+  updateRunningBanner();
+  render();
+  toast("計測をやめました");
 }
 
 /* ---------- mutations ---------- */
@@ -462,6 +492,7 @@ $("#addForm").addEventListener("submit", (e) => {
   inp.value = "";
 });
 $("#stopBtn").addEventListener("click", stopActivity);
+$("#cancelBtn").addEventListener("click", cancelActivity);
 $("#exportBtn").addEventListener("click", exportJSON);
 $("#importBtn").addEventListener("click", () => $("#importFile").click());
 $("#importFile").addEventListener("change", (e) => {

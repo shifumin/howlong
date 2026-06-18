@@ -106,6 +106,10 @@
   #runningBanner .rb-name { font-weight: 600; font-size: 16px; }
   #runningBanner .rb-time { font-size: 30px; font-variant-numeric: tabular-nums; letter-spacing: .02em; font-weight: 300; }
   #runningBanner button { background: rgba(255,255,255,.22); color: #fff; }
+  #runningBanner .rb-actions { display: flex; align-items: center; gap: 8px; }
+  /* 「やめる」は記録を残さない破棄なので、終了より控えめに従属させる */
+  #cancelBtn { background: rgba(255,255,255,.12); font-size: 13px; padding: 8px 12px; opacity: .85; }
+  #cancelBtn.armed { background: rgba(220,38,38,.9); opacity: 1; font-weight: 600; }
 
   /* add activity */
   .add-row { display: flex; gap: 8px; margin-bottom: 16px; }
@@ -192,7 +196,10 @@
       <div class="rb-name" id="rbName"></div>
       <div class="rb-time" id="rbTime">00:00</div>
     </div>
-    <button id="stopBtn">終了</button>
+    <div class="rb-actions">
+      <button id="cancelBtn">やめる</button>
+      <button id="stopBtn">終了</button>
+    </div>
   </div>
 
   <form class="add-row" id="addForm">
