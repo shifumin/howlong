@@ -108,8 +108,9 @@
   #runningBanner button { background: rgba(255,255,255,.22); color: #fff; }
   #runningBanner .rb-actions { display: flex; align-items: center; gap: 8px; }
   /* 「やめる」は記録を残さない破棄なので、終了より控えめに従属させる */
-  #cancelBtn { background: rgba(255,255,255,.12); font-size: 13px; padding: 8px 12px; opacity: .85; }
-  #cancelBtn.armed { background: rgba(220,38,38,.9); opacity: 1; font-weight: 600; }
+  #runningBanner #stopBtn { background: #fff; color: var(--accent); font-weight: 600; }
+  #runningBanner #cancelBtn { background: transparent; border: 1px solid rgba(255,255,255,.5); color: rgba(255,255,255,.92); font-size: 13px; padding: 8px 12px; }
+  #runningBanner #cancelBtn.armed { background: #dc2626; border-color: #dc2626; color: #fff; font-weight: 600; }
 
   /* add activity */
   .add-row { display: flex; gap: 8px; margin-bottom: 16px; }
