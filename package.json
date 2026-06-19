@@ -1,6 +1,6 @@
 {
   "name": "howlong",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A personal time-tracking PWA for everyday activities: record durations, see average/median, set a planned time",
   "private": true,
   "scripts": {
