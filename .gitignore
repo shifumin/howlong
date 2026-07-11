@@ -3,3 +3,6 @@ node_modules/
 
 # Build output — generated from app.ts by `npm run build` (and by CI on deploy).
 app.js
+
+# Local playwright-cli debug logs/snapshots.
+.playwright-cli/
