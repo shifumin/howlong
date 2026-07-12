@@ -22,6 +22,8 @@ No server. The app is a single `index.html` (inline CSS) plus one script
 - **Start / Stop timer** — one running activity at a time (exclusive). A live timer
   shows the elapsed time; closing the tab does not reset it (the start time is kept
   in `localStorage` so measurement continues)
+- **Pause / Resume** — pause a running timer and resume it later; time spent paused
+  is excluded from the recorded duration, and the paused state survives closing the tab
 - **Statistics** — per activity: average, median, count, and latest, computed automatically
 - **Planned time** — set a planned duration per activity; when the average exceeds it,
   the value is highlighted in red (no notifications)
