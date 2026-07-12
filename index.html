@@ -111,6 +111,9 @@
   #runningBanner #stopBtn { background: #fff; color: var(--accent); font-weight: 600; }
   #runningBanner #cancelBtn { background: transparent; border: 1px solid rgba(255,255,255,.5); color: rgba(255,255,255,.92); font-size: 13px; padding: 8px 12px; }
   #runningBanner #cancelBtn.armed { background: #dc2626; border-color: #dc2626; color: #fff; font-weight: 600; }
+  /* 一時停止中はバナー全体をグレー系にして一目で分かるようにする */
+  #runningBanner.paused { background: var(--sub); }
+  #runningBanner #pauseBtn.paused { background: #fff; color: var(--accent); font-weight: 600; }
 
   /* add activity */
   .add-row { display: flex; gap: 8px; margin-bottom: 16px; }
@@ -199,6 +202,7 @@
     </div>
     <div class="rb-actions">
       <button id="cancelBtn">やめる</button>
+      <button id="pauseBtn">一時停止</button>
       <button id="stopBtn">終了</button>
     </div>
   </div>
