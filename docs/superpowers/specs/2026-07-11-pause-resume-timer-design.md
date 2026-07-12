@@ -20,18 +20,20 @@
 ```ts
 interface Running {
   activityId: string;
-  start: number;         // 現在の計測セグメントの開始時刻(ms)
-  accumulatedMs: number; // これまでに実行済みだった時間の合計(ms)
-  paused: boolean;       // 一時停止中かどうか
+  start: number;          // 現在の計測セグメントの開始時刻(ms)。再開のたびに更新される
+  firstStart: number;     // 計測を最初に開始した時刻(ms)。記録の開始日時表示に使う（再開しても変わらない）
+  accumulatedMs: number;  // これまでに実行済みだった時間の合計(ms)
+  paused: boolean;        // 一時停止中かどうか
 }
 ```
 
-- 経過時間の計算式:
+- 経過時間の計算式（`elapsedMs()` ヘルパーに集約）:
   - 一時停止中: `accumulatedMs`
   - 実行中: `accumulatedMs + (Date.now() - start)`
 - 一時停止時: `accumulatedMs += Date.now() - start; paused = true`
-- 再開時: `start = Date.now(); paused = false`
+- 再開時: `start = Date.now(); paused = false`（`firstStart` は変えない）
 - `state.running` は既存どおり `save()` で localStorage に永続化するため、ページリロードを跨いでも一時停止状態が復元される。
+- `firstStart` を追加した理由: `start` は再開のたびにリセットされるため、それを記録の開始日時表示にそのまま使うと「最後に再開した時刻」が表示されてしまう。最初の開始時刻を別に保持することで、一時停止・再開を挟んでも履歴の開始日時が正しく表示される（実装時に発見・追加した補正）。
 
 ## 関数・振る舞い
 
@@ -50,8 +52,8 @@ interface Running {
 
 ### 既存関数の変更
 
-- `startActivity()`: `Running` 生成時に `accumulatedMs: 0, paused: false` を追加。
-- `stopActivity()`: 記録する分の計算を、単純な `(endMs - startMs) / 60000` ではなく `accumulatedMs + (paused ? 0 : now - start)` を基準にした式に変更する。一時停止中に「終了」を押した場合もその時点の累積時間で記録される。1分未満は既存どおり最低1分に切り上げる。
+- `startActivity()`: `Running` 生成時に `firstStart: now, accumulatedMs: 0, paused: false` を追加（`start` と `firstStart` は開始時点では同じ値）。
+- `stopActivity()`: 記録の開始日時には `running.start` ではなく `running.firstStart` を使う（再開時刻ではなく最初の開始時刻を表示するため）。記録する分の計算は、単純な `(endMs - startMs) / 60000` ではなく `elapsedMs(running)` を基準にした式に変更する。一時停止中に「終了」を押した場合もその時点の累積時間で記録される。1分未満は既存どおり最低1分に切り上げる。
 - `updateRunningBanner()`:
   - `paused` なら: `banner.classList.add("paused")`、`#pauseBtn` のテキストを「再開」にし `paused` クラスを付与、`#rbName` を「〜を一時停止中」に、時間表示は `accumulatedMs` から固定計算して `setInterval` は回さない。
   - 実行中なら: 上記をすべて元に戻す（今までどおりの表示・更新）。
