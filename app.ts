@@ -17,7 +17,10 @@ interface Activity {
 // 計測中の状態
 interface Running {
   activityId: string;
-  start: number;
+  start: number;         // 現在の計測セグメントの開始時刻(ms)。一時停止からの再開のたびに更新される
+  firstStart: number;    // 計測を最初に開始した時刻(ms)。記録の開始日時表示に使う（再開しても変わらない）
+  accumulatedMs: number;  // これまでに実行済みだった時間の合計(ms)
+  paused: boolean;        // 一時停止中かどうか
 }
 // localStorage に保存するデータ全体
 interface DB {
@@ -42,14 +45,26 @@ function $<T extends Element = HTMLElement>(sel: string, el: ParentNode = docume
 /* ---------- state ---------- */
 let state: DB = load();
 
+// 旧バージョンの localStorage データ（accumulatedMs/paused/firstStart が無い running）を補完する
+function normalizeRunning(r: Partial<Running> | null | undefined): Running | null {
+  if (!r || typeof r.activityId !== "string" || typeof r.start !== "number") return null;
+  return {
+    activityId: r.activityId,
+    start: r.start,
+    firstStart: typeof r.firstStart === "number" ? r.firstStart : r.start,
+    accumulatedMs: typeof r.accumulatedMs === "number" ? r.accumulatedMs : 0,
+    paused: typeof r.paused === "boolean" ? r.paused : false,
+  };
+}
+
 function load(): DB {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw) as { activities?: unknown; running?: Running | null };
+      const parsed = JSON.parse(raw) as { activities?: unknown; running?: Partial<Running> | null };
       if (parsed && Array.isArray(parsed.activities)) {
         // 古いデータに running が無くても null で補う
-        return { activities: parsed.activities as Activity[], running: parsed.running ?? null };
+        return { activities: parsed.activities as Activity[], running: normalizeRunning(parsed.running) };
       }
     }
   } catch (e) { /* fall through to default */ }
@@ -121,6 +136,10 @@ function startTimerLoop(): void {
 function stopTimerLoop(): void {
   if (tick) { clearInterval(tick); tick = null; }
 }
+// 一時停止時間を除いた実働の経過時間(ms)を返す
+function elapsedMs(running: Running): number {
+  return running.paused ? running.accumulatedMs : running.accumulatedMs + (Date.now() - running.start);
+}
 function updateRunningBanner(): void {
   const banner = $("#runningBanner");
   const running = state.running;
@@ -145,7 +164,8 @@ function updateRunningBanner(): void {
 
 function startActivity(id: string): void {
   if (state.running) { toast("計測中の活動があります"); return; }
-  state.running = { activityId: id, start: Date.now() };
+  const now = Date.now();
+  state.running = { activityId: id, start: now, firstStart: now, accumulatedMs: 0, paused: false };
   save();
   startTimerLoop();
 }
