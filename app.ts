@@ -145,16 +145,21 @@ function updateRunningBanner(): void {
   const running = state.running;
   if (!running) {
     banner.classList.remove("show");
+    banner.classList.remove("paused");
     document.body.classList.remove("running");
     stopTimerLoop();
     return;
   }
   const act = state.activities.find((a) => a.id === running.activityId);
-  if (!act) { state.running = null; save(); banner.classList.remove("show"); document.body.classList.remove("running"); stopTimerLoop(); return; }
+  if (!act) { state.running = null; save(); banner.classList.remove("show"); banner.classList.remove("paused"); document.body.classList.remove("running"); stopTimerLoop(); return; }
   banner.classList.add("show");
   document.body.classList.add("running");
-  $("#rbName").textContent = act.name + " を計測中";
-  const sec = Math.max(0, Math.floor((Date.now() - running.start) / 1000));
+  banner.classList.toggle("paused", running.paused);
+  $("#rbName").textContent = act.name + (running.paused ? " を一時停止中" : " を計測中");
+  const pauseBtn = $<HTMLButtonElement>("#pauseBtn");
+  pauseBtn.textContent = running.paused ? "再開" : "一時停止";
+  pauseBtn.classList.toggle("paused", running.paused);
+  const sec = Math.max(0, Math.floor(elapsedMs(running) / 1000));
   const h = Math.floor(sec / 3600);
   const m = Math.floor((sec % 3600) / 60);
   const s = sec % 60;
@@ -169,16 +174,33 @@ function startActivity(id: string): void {
   save();
   startTimerLoop();
 }
+function pauseActivity(): void {
+  const running = state.running;
+  if (!running || running.paused) return;
+  running.accumulatedMs += Date.now() - running.start;
+  running.paused = true;
+  save();
+  stopTimerLoop();
+  updateRunningBanner();
+}
+function resumeActivity(): void {
+  const running = state.running;
+  if (!running || !running.paused) return;
+  running.start = Date.now();
+  running.paused = false;
+  save();
+  startTimerLoop();
+}
 function stopActivity(): void {
   const running = state.running;
   if (!running) return;
   disarmCancel();
   const act = state.activities.find((a) => a.id === running.activityId);
-  const startMs = running.start;
+  const startMs = running.firstStart;
   const endMs = Date.now();
+  const minutes = Math.max(1, Math.round(elapsedMs(running) / 60000));
   state.running = null;
   if (act) {
-    const minutes = Math.max(1, Math.round((endMs - startMs) / 60000));
     act.records.push({ start: toLocalMinuteISO(startMs), end: toLocalMinuteISO(endMs), minutes });
   }
   save();
@@ -513,6 +535,9 @@ $("#addForm").addEventListener("submit", (e) => {
 });
 $("#stopBtn").addEventListener("click", stopActivity);
 $("#cancelBtn").addEventListener("click", cancelActivity);
+$("#pauseBtn").addEventListener("click", () => {
+  if (state.running?.paused) resumeActivity(); else pauseActivity();
+});
 $("#exportBtn").addEventListener("click", exportJSON);
 $("#importBtn").addEventListener("click", () => $("#importFile").click());
 $("#importFile").addEventListener("change", (e) => {
@@ -527,7 +552,10 @@ document.addEventListener("visibilitychange", () => {
 
 /* ---------- boot ---------- */
 render();
-if (state.running) startTimerLoop();
+if (state.running) {
+  if (state.running.paused) updateRunningBanner();
+  else startTimerLoop();
+}
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
