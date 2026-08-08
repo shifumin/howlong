@@ -24,6 +24,8 @@ No server. The app is a single `index.html` (inline CSS) plus one script
   in `localStorage` so measurement continues)
 - **Pause / Resume** — pause a running timer and resume it later; time spent paused
   is excluded from the recorded duration, and the paused state survives closing the tab
+- **Cancel** — discard a running measurement without recording it; the button asks
+  for a second tap to confirm, so a mis-tap costs nothing
 - **Statistics** — per activity: average, median, count, and latest, computed automatically
 - **Planned time** — set a planned duration per activity; when the average exceeds it,
   the value is highlighted in red (no notifications)
@@ -43,7 +45,7 @@ All time values are in **minutes**.
 
 ## Development
 
-Requires Node.js.
+Requires Node.js (CI builds on 24).
 
 ```bash
 npm install        # install TypeScript (dev dependency)
@@ -55,6 +57,8 @@ Then open `index.html` (e.g. via a local server) to try it. `app.js` is
 git-ignored — you only ever commit `app.ts`; the build happens in CI.
 
 ## Data model
+
+This is what **export** writes and **import** accepts:
 
 ```json
 {
@@ -73,6 +77,12 @@ git-ignored — you only ever commit `app.ts`; the build happens in CI.
 
 The order of the `activities` array is the display order (the ▲▼ buttons reorder
 the array; there is no separate order field).
+
+`localStorage` keeps the same object plus a `running` entry while a measurement
+is in progress: `activityId`, `firstStart` (when the timer was first started),
+`start` (when the current segment started), `accumulatedMs` (time already run)
+and `paused`. That is what lets a running — or paused — timer survive closing
+the tab. It is not part of the export.
 
 Records data stays in `localStorage` on the device only. iOS may rarely clear
 `localStorage`, so **JSON export is the backup mechanism**.

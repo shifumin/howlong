@@ -27,8 +27,11 @@ self.addEventListener("fetch", (e) => {
   if (req.method !== "GET") return;
 
   // Network-first for the HTML document so a new deploy shows up on reload
-  // (the whole app — CSS + JS — is inline in index.html). Falls back to cache
-  // when offline, keeping the app usable without a connection.
+  // (index.html holds the markup and the inline CSS). Falls back to cache when
+  // offline, keeping the app usable without a connection.
+  // app.js is NOT in ASSETS and is not an HTML document, so it takes the
+  // cache-first branch below: a changed app.js only reaches returning visitors
+  // once CACHE is bumped.
   const isHTML =
     req.mode === "navigate" ||
     req.destination === "document" ||
@@ -47,7 +50,7 @@ self.addEventListener("fetch", (e) => {
     return;
   }
 
-  // Cache-first for other static assets (icons, manifest), network fallback.
+  // Cache-first for everything else (app.js, icons, manifest), network fallback.
   e.respondWith(
     caches.match(req).then((hit) =>
       hit ||
