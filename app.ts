@@ -154,7 +154,7 @@ let tick: number | null = null;
 function syncTimerLoop(): void {
   const needed = state.runnings.some((r) => !r.paused);
   if (needed && tick == null) {
-    tick = setInterval(updateRunningBanner, 1000);
+    tick = setInterval(tickBanner, 1000);
   } else if (!needed && tick != null) {
     clearInterval(tick);
     tick = null;
@@ -169,7 +169,8 @@ function refreshRunning(): void {
     state.runnings = alive;
     save();
   }
-  updateRunningBanner();
+  renderBanner();
+  tickBanner();
   syncTimerLoop();
 }
 
@@ -188,29 +189,56 @@ function fmtElapsed(ms: number): string {
   return h > 0 ? `${h}:${p(m)}:${p(s)}` : `${p(m)}:${p(s)}`;
 }
 
-function updateRunningBanner(): void {
+// バナーの行を作り直す。開始・終了・やめる・一時停止・再開のたびに呼ぶ（毎秒は呼ばない）
+function renderBanner(): void {
   const banner = $("#runningBanner");
-  const running = state.runnings[0];
-  if (!running) {
-    banner.classList.remove("show");
-    banner.classList.remove("paused");
-    document.body.classList.remove("running");
-    return;
+  banner.innerHTML = "";
+  const runnings = state.runnings;
+  banner.classList.toggle("show", runnings.length > 0);
+
+  for (const r of runnings) {
+    const act = state.activities.find((a) => a.id === r.activityId);
+    if (!act) continue;
+    const armed = armedCancels.has(r.activityId);
+    const row = document.createElement("div");
+    row.className = "rb-row" + (r.paused ? " paused" : "");
+    row.dataset.id = r.activityId;
+    row.innerHTML = `
+      <div>
+        <div class="rb-name"></div>
+        <div class="rb-time">00:00</div>
+      </div>
+      <div class="rb-actions">
+        <button class="rb-cancel${armed ? " armed" : ""}">${armed ? "本当にやめる？" : "やめる"}</button>
+        <button class="rb-pause${r.paused ? " paused" : ""}">${r.paused ? "再開" : "一時停止"}</button>
+        <button class="rb-stop">終了</button>
+      </div>
+    `;
+    $(".rb-name", row).textContent = act.name + (r.paused ? " を一時停止中" : " を計測中");
+    $(".rb-cancel", row).onclick = () => cancelActivity(r.activityId);
+    $(".rb-pause", row).onclick = () => {
+      if (findRunning(r.activityId)?.paused) resumeActivity(r.activityId);
+      else pauseActivity(r.activityId);
+    };
+    $(".rb-stop", row).onclick = () => stopActivity(r.activityId);
+    banner.appendChild(row);
   }
-  const act = state.activities.find((a) => a.id === running.activityId);
-  if (!act) return;
-  banner.classList.add("show");
-  document.body.classList.add("running");
-  banner.classList.toggle("paused", running.paused);
-  $("#rbName").textContent = act.name + (running.paused ? " を一時停止中" : " を計測中");
-  const pauseBtn = $<HTMLButtonElement>("#pauseBtn");
-  pauseBtn.textContent = running.paused ? "再開" : "一時停止";
-  pauseBtn.classList.toggle("paused", running.paused);
-  const cancelBtn = $<HTMLButtonElement>("#cancelBtn");
-  const armed = armedCancels.has(running.activityId);
-  cancelBtn.classList.toggle("armed", armed);
-  cancelBtn.textContent = armed ? "本当にやめる？" : "やめる";
-  $("#rbTime").textContent = fmtElapsed(elapsedMs(running));
+
+  // バナーの高さは行数で変わるので、最後のカードが隠れない余白を実測して確保する
+  document.body.style.paddingBottom = runnings.length
+    ? `calc(env(safe-area-inset-bottom) + ${banner.offsetHeight + 28}px)`
+    : "";
+}
+
+// 毎秒呼ばれる。各行の経過時間のテキストだけを更新し、DOM 構造やクラスには触らない。
+// 行を作り直すと「本当にやめる？」の armed 表示やフォーカスが1秒で失われるため分けている
+function tickBanner(): void {
+  const rows = document.querySelectorAll<HTMLElement>("#runningBanner .rb-row");
+  rows.forEach((row) => {
+    const r = findRunning(row.dataset.id || "");
+    if (!r) return;
+    $(".rb-time", row).textContent = fmtElapsed(elapsedMs(r));
+  });
 }
 
 function startActivity(id: string): void {
@@ -268,13 +296,13 @@ function clearArmed(id: string): void {
 // armed 解除して表示も戻す。3秒の自動解除タイマーはこちらを使う
 function disarmCancel(id: string): void {
   clearArmed(id);
-  updateRunningBanner();
+  renderBanner();
 }
 function cancelActivity(id: string): void {
   if (!findRunning(id)) return;
   if (!armedCancels.has(id)) {
     armedCancels.set(id, window.setTimeout(() => disarmCancel(id), 3000));
-    updateRunningBanner();
+    renderBanner();
     return;
   }
   clearArmed(id);
@@ -583,19 +611,6 @@ $("#addForm").addEventListener("submit", (e) => {
   addActivity(inp.value);
   inp.value = "";
 });
-$("#stopBtn").addEventListener("click", () => {
-  const r = state.runnings[0];
-  if (r) stopActivity(r.activityId);
-});
-$("#cancelBtn").addEventListener("click", () => {
-  const r = state.runnings[0];
-  if (r) cancelActivity(r.activityId);
-});
-$("#pauseBtn").addEventListener("click", () => {
-  const r = state.runnings[0];
-  if (!r) return;
-  if (r.paused) resumeActivity(r.activityId); else pauseActivity(r.activityId);
-});
 $("#exportBtn").addEventListener("click", exportJSON);
 $("#importBtn").addEventListener("click", () => $("#importFile").click());
 $("#importFile").addEventListener("change", (e) => {
@@ -605,7 +620,7 @@ $("#importFile").addEventListener("change", (e) => {
   input.value = "";
 });
 document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) updateRunningBanner();
+  if (!document.hidden) tickBanner();
 });
 
 /* ---------- boot ---------- */

@@ -94,26 +94,34 @@
     background: var(--accent);
     color: #fff;
     border-radius: var(--radius);
-    padding: 14px 18px;
-    align-items: center;
-    justify-content: space-between;
+    /* パディングは行側が持つ。一時停止行が左右いっぱいに背景色を敷けるようにするため */
+    padding: 0;
+    overflow: hidden;
+    flex-direction: column;
+    align-items: stretch;
     box-shadow: 0 8px 28px rgba(0,0,0,.32);
     z-index: 40;
   }
   #runningBanner.show { display: flex; }
-  /* reserve space so the last card isn't hidden behind the fixed bar */
-  body.running { padding-bottom: calc(env(safe-area-inset-bottom) + 116px); }
+  .rb-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px 18px;
+  }
+  .rb-row + .rb-row { border-top: 1px solid rgba(255,255,255,.22); }
+  /* 一時停止中の行だけを暗くする。複数計測中に一時停止が混ざっても一目で見分けられるようにするため */
+  .rb-row.paused { background: rgba(0,0,0,.22); }
   #runningBanner .rb-name { font-weight: 600; font-size: 16px; }
   #runningBanner .rb-time { font-size: 30px; font-variant-numeric: tabular-nums; letter-spacing: .02em; font-weight: 300; }
   #runningBanner button { background: rgba(255,255,255,.22); color: #fff; }
-  #runningBanner .rb-actions { display: flex; align-items: center; gap: 8px; }
+  .rb-actions { display: flex; align-items: center; gap: 8px; }
   /* 「やめる」は記録を残さない破棄なので、終了より控えめに従属させる */
-  #runningBanner #stopBtn { background: #fff; color: var(--accent); font-weight: 600; }
-  #runningBanner #cancelBtn { background: transparent; border: 1px solid rgba(255,255,255,.5); color: rgba(255,255,255,.92); font-size: 13px; padding: 8px 12px; }
-  #runningBanner #cancelBtn.armed { background: #dc2626; border-color: #dc2626; color: #fff; font-weight: 600; }
-  /* 一時停止中はバナー全体をグレー系にして一目で分かるようにする */
-  #runningBanner.paused { background: var(--sub); }
-  #runningBanner #pauseBtn.paused { background: #fff; color: var(--accent); font-weight: 600; }
+  #runningBanner .rb-stop { background: #fff; color: var(--accent); font-weight: 600; }
+  #runningBanner .rb-cancel { background: transparent; border: 1px solid rgba(255,255,255,.5); color: rgba(255,255,255,.92); font-size: 13px; padding: 8px 12px; }
+  #runningBanner .rb-cancel.armed { background: #dc2626; border-color: #dc2626; color: #fff; font-weight: 600; }
+  #runningBanner .rb-pause.paused { background: #fff; color: var(--accent); font-weight: 600; }
 
   /* add activity */
   .add-row { display: flex; gap: 8px; margin-bottom: 16px; }
@@ -195,17 +203,8 @@
 </header>
 
 <div class="main">
-  <div id="runningBanner">
-    <div>
-      <div class="rb-name" id="rbName"></div>
-      <div class="rb-time" id="rbTime">00:00</div>
-    </div>
-    <div class="rb-actions">
-      <button id="cancelBtn">やめる</button>
-      <button id="pauseBtn">一時停止</button>
-      <button id="stopBtn">終了</button>
-    </div>
-  </div>
+  <!-- 計測中の活動ごとに app.js が .rb-row を生成する -->
+  <div id="runningBanner"></div>
 
   <form class="add-row" id="addForm">
     <input type="text" id="addInput" placeholder="活動名を追加（例: 夕食）" maxlength="40" autocomplete="off">
