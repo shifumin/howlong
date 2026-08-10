@@ -54,6 +54,28 @@ Offline still works: every network-first response is written to the cache, and
 `app.js` is pre-cached at install, so a failed fetch falls back to the last good
 copy.
 
+### Releases are created from the `version` in `package.json`
+
+Bumping `version` in `package.json` and pushing to `main` is the whole release
+process. `.github/workflows/release.yml` tags the commit `v<version>` and
+publishes a release with auto-generated notes. It keys off "does a tag for this
+version exist", so re-running it or pushing without a bump does nothing.
+
+Releases used to be created by hand, which is why 1.3.0, 1.3.1 and 1.3.2 all
+shipped while `v1.2.2` still showed as the latest release.
+
+Auto-generated notes are a commit list. When a release deserves the prose the
+earlier ones have, replace the body afterwards:
+
+```bash
+gh release edit v1.3.2 --notes-file notes.md
+```
+
+| Change | What to bump |
+|--------|--------------|
+| Any user-visible change | `version` in `package.json` |
+| A cache-first asset (`manifest.json`, `icons/*`) | also `CACHE` in `sw.js` |
+
 ## Conventions
 
 - Commits: Conventional Commits, English (per global CLAUDE.md).
@@ -72,4 +94,5 @@ copy.
 | `manifest.json` / `icons/` | PWA shell. |
 | `tsconfig.json` / `package.json` | TS config and build scripts. |
 | `.github/workflows/deploy.yml` | CI: compiles `app.ts`, publishes to Pages. |
+| `.github/workflows/release.yml` | CI: tags and releases when `package.json` `version` has no tag. |
 | `docs/superpowers/specs/` | Design docs for shipped features (the *why* behind decisions the code doesn't explain). |

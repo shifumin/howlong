@@ -1,0 +1,75 @@
+name: Release on version bump
+
+# Whenever main carries a package.json version that has no tag yet, tag it and
+# publish a release. Releases used to be created by hand, which is how 1.3.0,
+# 1.3.1 and 1.3.2 all shipped with v1.2.2 still showing as the latest release.
+#
+# The job keys off "is there a tag for the current version" rather than off the
+# diff, so it is idempotent: re-running it, or pushing again without bumping,
+# does nothing.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      # Tags are needed so the existence check below can see them, and so the
+      # generated notes can diff against the previous release.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # The repo default for GITHUB_TOKEN is read-only; the permissions block
+      # above is what grants write. Print what the token actually got so a
+      # missing permission shows up here instead of as a failed release.
+      - name: Show the token's effective permissions
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api "repos/$GITHUB_REPOSITORY" --jq '{push: .permissions.push, admin: .permissions.admin}'
+
+      - name: Read the version and decide whether it needs a release
+        id: check
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if [ -z "$version" ]; then
+            echo "package.json has no version" >&2
+            exit 1
+          fi
+          tag="v$version"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+            echo "$tag already exists — nothing to release."
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "$tag does not exist yet — releasing."
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # gh creates the tag as part of the release, pointing at this commit —
+      # the one that carries the bumped version, matching how v1.0.0 through
+      # v1.3.2 were tagged.
+      - name: Create the release
+        if: steps.check.outputs.needed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.check.outputs.tag }}" \
+            --title "${{ steps.check.outputs.tag }}" \
+            --target "$GITHUB_SHA" \
+            --generate-notes
+
+      - name: Report
+        if: steps.check.outputs.needed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release view "${{ steps.check.outputs.tag }}" --json tagName,url,isDraft
