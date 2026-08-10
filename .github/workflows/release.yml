@@ -29,15 +29,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      # The repo default for GITHUB_TOKEN is read-only; the permissions block
-      # above is what grants write. Print what the token actually got so a
-      # missing permission shows up here instead of as a failed release.
-      - name: Show the token's effective permissions
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh api "repos/$GITHUB_REPOSITORY" --jq .permissions
-
+      # The repo default for GITHUB_TOKEN is read-only, so the permissions block
+      # above is what grants write. No probe step is needed to confirm it: the
+      # runner prints the granted scopes under "Set up job" > "GITHUB_TOKEN
+      # Permissions", which reads "Contents: write" for this workflow.
       - name: Read the version and decide whether it needs a release
         id: check
         run: |
