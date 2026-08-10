@@ -30,21 +30,29 @@ Push to `main` → GitHub Actions (`.github/workflows/deploy.yml`) compiles
 - Pages **Source** is set to **GitHub Actions** (not "deploy from a branch").
 - The repo must stay **public** (free GitHub Pages requirement).
 
-### ⚠️ Changing `app.ts` requires bumping `CACHE` in `sw.js`
+### Cache strategy and when to bump `CACHE` in `sw.js`
 
-Only the HTML is served network-first. `app.js` is **not** in the Service
-Worker's `ASSETS` list, so it falls through to the cache-first branch: a
-returning visitor keeps the old `app.js` until the cache name changes.
+`index.html` and `app.js` are both served **network-first**, because they ship
+together and must never drift apart. A reload picks up either one.
 
 | Changed file | Served how | Bump `CACHE`? |
 |--------------|------------|---------------|
 | `index.html` | network-first | No — a reload picks it up |
-| `app.ts` → `app.js` | cache-first | **Yes** |
+| `app.ts` → `app.js` | network-first | No — a reload picks it up |
 | `manifest.json`, `icons/*` | cache-first | **Yes** |
 
-Bump `howlong-vN` → `howlong-vN+1` in the same push that changes `app.ts`.
-Skipping it deploys new HTML against stale JS — that is how 1.2.0 shipped a
-pause button that did nothing (`2fe92dd`, fixed in `55ddc53`).
+Bump `howlong-vN` → `howlong-vN+1` only when a cache-first asset changes.
+
+`app.js` used to be cache-first, which made the bump mandatory on every
+`app.ts` change and turned a forgotten bump into new HTML running against a
+stale script — that is how 1.2.0 shipped a pause button that did nothing
+(`2fe92dd`, fixed in `55ddc53`). Version 1.3.1 moved `app.js` to network-first
+so the mistake is no longer possible; see
+`docs/superpowers/specs/2026-08-10-app-js-network-first-design.md`.
+
+Offline still works: every network-first response is written to the cache, and
+`app.js` is pre-cached at install, so a failed fetch falls back to the last good
+copy.
 
 ## Conventions
 
@@ -60,7 +68,7 @@ pause button that did nothing (`2fe92dd`, fixed in `55ddc53`).
 | `app.ts` | App source (TypeScript). |
 | `app.js` | Compiled output (generated from `app.ts`, git-ignored). |
 | `index.html` | Markup + inline CSS; loads `app.js`. |
-| `sw.js` | Service Worker (network-first HTML, cache-first assets — see Deploy). |
+| `sw.js` | Service Worker (network-first HTML + `app.js`, cache-first shell — see Deploy). |
 | `manifest.json` / `icons/` | PWA shell. |
 | `tsconfig.json` / `package.json` | TS config and build scripts. |
 | `.github/workflows/deploy.yml` | CI: compiles `app.ts`, publishes to Pages. |
