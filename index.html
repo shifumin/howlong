@@ -113,18 +113,31 @@
   .rb-row + .rb-row { border-top: 1px solid rgba(255,255,255,.22); }
   /* 一時停止中の行だけを暗くする。複数計測中に一時停止が混ざっても一目で見分けられるようにするため */
   .rb-row.paused { background: rgba(0,0,0,.22); }
+  /* 名前が長い行に押されてボタンが縮まないようにする。縮ませると縮み幅が名前の
+     長さで変わり、行ごとにボタンの寸法が変わってしまう（カード側の .head-actions と同じ理由） */
+  .rb-head { min-width: 0; }
   #runningBanner .rb-name { font-weight: 600; font-size: 16px; }
   #runningBanner .rb-time { font-size: 30px; font-variant-numeric: tabular-nums; letter-spacing: .02em; font-weight: 300; }
   /* 2件以上を同時に計測しているときは、バナーが画面を覆わないよう行を詰める */
   #runningBanner.multi .rb-row { padding: 8px 18px; }
   #runningBanner.multi .rb-time { font-size: 22px; }
-  #runningBanner button { background: rgba(255,255,255,.22); color: #fff; }
-  .rb-actions { display: flex; align-items: center; gap: 8px; }
+  #runningBanner button { background: rgba(255,255,255,.22); color: #fff; white-space: nowrap; }
+  .rb-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
   /* 「やめる」は記録を残さない破棄なので、終了より控えめに従属させる */
   #runningBanner .rb-stop { background: #fff; color: var(--accent); font-weight: 600; }
   #runningBanner .rb-cancel { background: transparent; border: 1px solid rgba(255,255,255,.5); color: rgba(255,255,255,.92); font-size: 13px; padding: 8px 12px; }
   #runningBanner .rb-cancel.armed { background: #dc2626; border-color: #dc2626; color: #fff; font-weight: 600; }
+  /* 「一時停止」と「再開」で幅が変わると、押すたびに隣のボタンが横にずれる。
+     長い方の幅を下限にして、状態が変わっても寸法を保つ */
+  #runningBanner .rb-pause { min-width: 88px; }
   #runningBanner .rb-pause.paused { background: #fff; color: var(--accent); font-weight: 600; }
+  /* 狭い画面ではボタン3つと名前を1行に並べる幅が無い。ボタンを下段に回し、
+     名前と時刻を同じ行に並べて、どの行も同じ形・同じボタン寸法になるようにする */
+  @media (max-width: 560px) {
+    .rb-row { flex-direction: column; align-items: stretch; gap: 8px; }
+    .rb-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+    .rb-actions { justify-content: flex-end; }
+  }
 
   /* add activity */
   .add-row { display: flex; gap: 8px; margin-bottom: 16px; }

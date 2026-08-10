@@ -206,7 +206,7 @@ function renderBanner(): void {
     row.className = "rb-row" + (r.paused ? " paused" : "");
     row.dataset.id = r.activityId;
     row.innerHTML = `
-      <div>
+      <div class="rb-head">
         <div class="rb-name"></div>
         <div class="rb-time">00:00</div>
       </div>

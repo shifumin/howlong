@@ -177,6 +177,18 @@ const armedCancels = new Map<string, number>();  // activityId -> setTimeout の
 - **一時停止の表現**: 現行の `#runningBanner.paused`（バナー全体をグレー化）は複数行では使えないため、`.rb-row.paused { background: rgba(0,0,0,.22); }` に落として行単位で暗くする。バナーの地色は `--accent` のまま。3件計測中のうち1件だけ一時停止している状態が一目で分かることを目的とする。名前は現行どおり「〜を一時停止中」と表示する。
 - **時刻のフォントサイズ**: `.rb-time` の 30px のままでは3行で高さが200pxを超える。`#runningBanner.multi .rb-time { font-size: 22px; }` として2行以上のときだけ縮める。1行のときの見た目は現行と完全に同じにする。
 
+### 狭い画面での行レイアウト（1.3.2 で追加）
+
+初版は `.rb-row` を常に横1行（名前と時刻のブロック＋ボタン群）にしていたが、実機で不具合が出たため次を追加した。
+
+- `.rb-actions { flex-shrink: 0; }` — **必須**。これが無いと、名前が長い行ではボタン群が縮められ、縮み幅が名前の長さで決まるため行ごとにボタンの寸法が変わる。実機（バナー幅358px）では「シェーバー洗浄」の行だけボタンが 49/64/46px に潰れ、ラベルまで「やめ／る」と折り返した。カード側の `.head-actions` には最初からこの指定があり、そちらが正解のパターンだった。
+- `#runningBanner button { white-space: nowrap; }` — ラベルを絶対に折り返させない。
+- `.rb-head { min-width: 0; }` — 縮む側を名前ブロックに寄せる。
+- `#runningBanner .rb-pause { min-width: 88px; }` — 「一時停止」(88px) と「再開」(58px) で幅が変わると押すたびに隣のボタンが横にずれるため、長い方を下限にする。
+- `@media (max-width: 560px)` で `.rb-row` を縦積みにし、名前と時刻を同じ行（`.rb-head` を `justify-content: space-between`）、ボタンを下段に回す。狭い画面ではボタン3つ（自然幅で計227px）と名前を1行に収める余地が無いため。
+
+この結果、バナー幅358pxで全行のボタンが 65×38 / 88×43 / 58×43 に固定され、行の高さも約100pxで揃う。名前が40文字（`maxlength` 上限）の場合は名前だけが折り返して行が高くなるが、ボタンの寸法は変わらない。560px超の画面では従来の横1行レイアウトを維持する。
+
 ### 下部の余白
 
 現行の `body.running { padding-bottom: calc(env(safe-area-inset-bottom) + 116px); }` は行数で高さが変わるため破綻する。このルールと `document.body.classList.add("running")` を削除し、`renderBanner()` の末尾で実測して設定する。
