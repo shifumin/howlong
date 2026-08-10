@@ -64,11 +64,11 @@ interface DB {
     1. `state.activities` に存在しない `activityId` を指す `runnings` の要素を除去する（除去が発生したら `save()`）
     2. `renderBanner()` — 行を作り直す
     3. `tickBanner()` — 経過時間を即座に反映する
-    4. `document.body.style.paddingBottom` を実測値から設定する（後述）
-    5. `syncTimerLoop()`
+    4. `syncTimerLoop()`
 
 - `renderBanner(): void`
   - `state.runnings` の各要素に対応する `.rb-row` を生成し、`#runningBanner` の中身を作り直す。
+  - 末尾で `document.body.style.paddingBottom` を実測値から設定する（後述）。バナーの高さを変えるのはこの関数だけなので、ここに置けば `disarmCancel()` のように `renderBanner()` を単独で呼ぶ経路でも余白が追随する。
   - `runnings` が空なら `show` クラスを外す。1件以上なら付ける。
   - `runnings.length >= 2` のとき `#runningBanner` に `multi` クラスを付ける。
   - `armedCancels` に含まれる `activityId` の行は、「やめる」ボタンを armed 表示（`armed` クラス + テキスト「本当にやめる？」）で復元する。
@@ -179,7 +179,7 @@ const armedCancels = new Map<string, number>();  // activityId -> setTimeout の
 
 ### 下部の余白
 
-現行の `body.running { padding-bottom: calc(env(safe-area-inset-bottom) + 116px); }` は行数で高さが変わるため破綻する。このルールと `document.body.classList.add("running")` を削除し、`refreshRunning()` の中で実測して設定する。
+現行の `body.running { padding-bottom: calc(env(safe-area-inset-bottom) + 116px); }` は行数で高さが変わるため破綻する。このルールと `document.body.classList.add("running")` を削除し、`renderBanner()` の末尾で実測して設定する。
 
 ```ts
 document.body.style.paddingBottom = state.runnings.length
