@@ -35,7 +35,8 @@ jobs:
       - name: Show the token's effective permissions
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh api "repos/$GITHUB_REPOSITORY" --jq '{push: .permissions.push, admin: .permissions.admin}'
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY" --jq .permissions
 
       - name: Read the version and decide whether it needs a release
         id: check
@@ -72,4 +73,5 @@ jobs:
         if: steps.check.outputs.needed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release view "${{ steps.check.outputs.tag }}" --json tagName,url,isDraft
+        run: |
+          gh release view "${{ steps.check.outputs.tag }}" --json tagName,url,isDraft
