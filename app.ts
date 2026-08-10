@@ -195,6 +195,8 @@ function renderBanner(): void {
   banner.innerHTML = "";
   const runnings = state.runnings;
   banner.classList.toggle("show", runnings.length > 0);
+  // 2件以上のときは行を詰めて縦に伸びすぎないようにする
+  banner.classList.toggle("multi", runnings.length > 1);
 
   for (const r of runnings) {
     const act = state.activities.find((a) => a.id === r.activityId);
@@ -242,7 +244,7 @@ function tickBanner(): void {
 }
 
 function startActivity(id: string): void {
-  if (state.runnings.length) { toast("計測中の活動があります"); return; }
+  if (findRunning(id)) { toast("この活動はすでに計測中です"); return; }
   const now = Date.now();
   state.runnings.push({ activityId: id, start: now, firstStart: now, accumulatedMs: 0, paused: false });
   save();
@@ -516,7 +518,9 @@ function render(): void {
     $(".rename", card).onclick = () => renameActivity(act.id);
 
     const startBtn = $<HTMLButtonElement>(".start", card);
-    startBtn.disabled = state.runnings.length > 0;
+    const isRunning = !!findRunning(act.id);
+    startBtn.disabled = isRunning;
+    startBtn.textContent = isRunning ? "計測中…" : "▶ 開始";
     startBtn.onclick = () => startActivity(act.id);
 
     $(".del", card).onclick = () => {

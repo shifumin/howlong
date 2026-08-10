@@ -1,5 +1,5 @@
 // howlong service worker — network-first HTML, cache-first assets
-const CACHE = "howlong-v4";
+const CACHE = "howlong-v5";
 const ASSETS = [
   "./",
   "./index.html",
