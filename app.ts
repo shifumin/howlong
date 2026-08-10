@@ -25,7 +25,7 @@ interface Running {
 // localStorage に保存するデータ全体
 interface DB {
   activities: Activity[];
-  running: Running | null;
+  runnings: Running[];   // 計測中の活動。1つの activityId につき最大1件
 }
 // 活動ごとの統計
 interface Stats {
@@ -57,18 +57,33 @@ function normalizeRunning(r: Partial<Running> | null | undefined): Running | nul
   };
 }
 
+// 新形式(runnings 配列)と旧形式(running 単一オブジェクト)の両方から計測中リストを復元する。
+// 同じ activityId が重複していたら先勝ちで捨てる（1活動1計測の不変条件を読み込み時に担保する）
+function normalizeRunnings(parsed: { runnings?: unknown; running?: Partial<Running> | null }): Running[] {
+  if (Array.isArray(parsed.runnings)) {
+    const out: Running[] = [];
+    for (const raw of parsed.runnings) {
+      const r = normalizeRunning(raw as Partial<Running>);
+      if (r && !out.some((x) => x.activityId === r.activityId)) out.push(r);
+    }
+    return out;
+  }
+  const single = normalizeRunning(parsed.running);
+  return single ? [single] : [];
+}
+
 function load(): DB {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw) as { activities?: unknown; running?: Partial<Running> | null };
+      const parsed = JSON.parse(raw) as { activities?: unknown; runnings?: unknown; running?: Partial<Running> | null };
       if (parsed && Array.isArray(parsed.activities)) {
-        // 古いデータに running が無くても null で補う
-        return { activities: parsed.activities as Activity[], running: normalizeRunning(parsed.running) };
+        // 古いデータに runnings が無くても running / 空配列で補う
+        return { activities: parsed.activities as Activity[], runnings: normalizeRunnings(parsed) };
       }
     }
   } catch (e) { /* fall through to default */ }
-  return { activities: [], running: null };
+  return { activities: [], runnings: [] };
 }
 
 function save(): boolean {
@@ -126,32 +141,64 @@ function fmtMin(v: number | null): string {
   return Math.round(v) + "分";
 }
 
+// 指定した活動が計測中ならその Running を返す
+function findRunning(activityId: string): Running | undefined {
+  return state.runnings.find((r) => r.activityId === activityId);
+}
+
 /* ---------- timer ---------- */
 let tick: number | null = null;
-function startTimerLoop(): void {
-  stopTimerLoop();
+
+// 計測中(一時停止していない)活動が1つ以上ある間だけ毎秒更新を回す。
+// 呼び出し側は「回すべきか」を判断せず、状態を変えたらこれを呼ぶだけでよい
+function syncTimerLoop(): void {
+  const needed = state.runnings.some((r) => !r.paused);
+  if (needed && tick == null) {
+    tick = setInterval(updateRunningBanner, 1000);
+  } else if (!needed && tick != null) {
+    clearInterval(tick);
+    tick = null;
+  }
+}
+
+// バナー周りの再同期の唯一の入口。状態を変えたあとに必ずこれを呼ぶ
+function refreshRunning(): void {
+  // 削除済みの活動を指す計測が残っていたら捨てる（自己修復）
+  const alive = state.runnings.filter((r) => state.activities.some((a) => a.id === r.activityId));
+  if (alive.length !== state.runnings.length) {
+    state.runnings = alive;
+    save();
+  }
   updateRunningBanner();
-  tick = setInterval(updateRunningBanner, 1000);
+  syncTimerLoop();
 }
-function stopTimerLoop(): void {
-  if (tick) { clearInterval(tick); tick = null; }
-}
+
 // 一時停止時間を除いた実働の経過時間(ms)を返す
 function elapsedMs(running: Running): number {
   return running.paused ? running.accumulatedMs : running.accumulatedMs + (Date.now() - running.start);
 }
+
+// 経過ミリ秒を "MM:SS"（1時間以上は "H:MM:SS"）に整形する
+function fmtElapsed(ms: number): string {
+  const sec = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  const p = (n: number) => String(n).padStart(2, "0");
+  return h > 0 ? `${h}:${p(m)}:${p(s)}` : `${p(m)}:${p(s)}`;
+}
+
 function updateRunningBanner(): void {
   const banner = $("#runningBanner");
-  const running = state.running;
+  const running = state.runnings[0];
   if (!running) {
     banner.classList.remove("show");
     banner.classList.remove("paused");
     document.body.classList.remove("running");
-    stopTimerLoop();
     return;
   }
   const act = state.activities.find((a) => a.id === running.activityId);
-  if (!act) { state.running = null; save(); banner.classList.remove("show"); banner.classList.remove("paused"); document.body.classList.remove("running"); stopTimerLoop(); return; }
+  if (!act) return;
   banner.classList.add("show");
   document.body.classList.add("running");
   banner.classList.toggle("paused", running.paused);
@@ -159,82 +206,81 @@ function updateRunningBanner(): void {
   const pauseBtn = $<HTMLButtonElement>("#pauseBtn");
   pauseBtn.textContent = running.paused ? "再開" : "一時停止";
   pauseBtn.classList.toggle("paused", running.paused);
-  const sec = Math.max(0, Math.floor(elapsedMs(running) / 1000));
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  const s = sec % 60;
-  const p = (n: number) => String(n).padStart(2, "0");
-  $("#rbTime").textContent = h > 0 ? `${h}:${p(m)}:${p(s)}` : `${p(m)}:${p(s)}`;
+  const cancelBtn = $<HTMLButtonElement>("#cancelBtn");
+  const armed = armedCancels.has(running.activityId);
+  cancelBtn.classList.toggle("armed", armed);
+  cancelBtn.textContent = armed ? "本当にやめる？" : "やめる";
+  $("#rbTime").textContent = fmtElapsed(elapsedMs(running));
 }
 
 function startActivity(id: string): void {
-  if (state.running) { toast("計測中の活動があります"); return; }
+  if (state.runnings.length) { toast("計測中の活動があります"); return; }
   const now = Date.now();
-  state.running = { activityId: id, start: now, firstStart: now, accumulatedMs: 0, paused: false };
+  state.runnings.push({ activityId: id, start: now, firstStart: now, accumulatedMs: 0, paused: false });
   save();
-  startTimerLoop();
+  refreshRunning();
+  render();
 }
-function pauseActivity(): void {
-  const running = state.running;
+function pauseActivity(id: string): void {
+  const running = findRunning(id);
   if (!running || running.paused) return;
   running.accumulatedMs += Date.now() - running.start;
   running.paused = true;
   save();
-  stopTimerLoop();
-  updateRunningBanner();
+  refreshRunning();
 }
-function resumeActivity(): void {
-  const running = state.running;
+function resumeActivity(id: string): void {
+  const running = findRunning(id);
   if (!running || !running.paused) return;
   running.start = Date.now();
   running.paused = false;
   save();
-  startTimerLoop();
+  refreshRunning();
 }
-function stopActivity(): void {
-  const running = state.running;
+function stopActivity(id: string): void {
+  const running = findRunning(id);
   if (!running) return;
-  disarmCancel();
-  const act = state.activities.find((a) => a.id === running.activityId);
+  clearArmed(id);
+  const act = state.activities.find((a) => a.id === id);
   const startMs = running.firstStart;
   const endMs = Date.now();
   const minutes = Math.max(1, Math.round(elapsedMs(running) / 60000));
-  state.running = null;
+  state.runnings = state.runnings.filter((r) => r.activityId !== id);
   if (act) {
     act.records.push({ start: toLocalMinuteISO(startMs), end: toLocalMinuteISO(endMs), minutes });
   }
   save();
-  stopTimerLoop();
-  updateRunningBanner();
+  refreshRunning();
   render();
   if (act) toast("記録しました");
 }
 
 // 計測の取り消し（記録を残さない）。誤タップ防止に2段階確認。
-let cancelArmed = false;
-let cancelArmTimer: number | null = null;
-function disarmCancel(): void {
-  cancelArmed = false;
-  if (cancelArmTimer) { clearTimeout(cancelArmTimer); cancelArmTimer = null; }
-  const btn = $("#cancelBtn");
-  btn.classList.remove("armed");
-  btn.textContent = "やめる";
+// armed 状態は活動ごとに持つ。行を作り直しても Map から表示を復元できる
+const armedCancels = new Map<string, number>();
+
+// armed 解除のみ（再描画しない）。他の処理の途中から呼ぶ用
+function clearArmed(id: string): void {
+  const t = armedCancels.get(id);
+  if (t != null) clearTimeout(t);
+  armedCancels.delete(id);
 }
-function cancelActivity(): void {
-  if (!state.running) return;
-  if (!cancelArmed) {
-    cancelArmed = true;
-    const btn = $("#cancelBtn");
-    btn.classList.add("armed");
-    btn.textContent = "本当にやめる？";
-    cancelArmTimer = window.setTimeout(disarmCancel, 3000);
+// armed 解除して表示も戻す。3秒の自動解除タイマーはこちらを使う
+function disarmCancel(id: string): void {
+  clearArmed(id);
+  updateRunningBanner();
+}
+function cancelActivity(id: string): void {
+  if (!findRunning(id)) return;
+  if (!armedCancels.has(id)) {
+    armedCancels.set(id, window.setTimeout(() => disarmCancel(id), 3000));
+    updateRunningBanner();
     return;
   }
-  disarmCancel();
-  state.running = null;
+  clearArmed(id);
+  state.runnings = state.runnings.filter((r) => r.activityId !== id);
   save();
-  stopTimerLoop();
-  updateRunningBanner();
+  refreshRunning();
   render();
   toast("計測をやめました");
 }
@@ -272,8 +318,10 @@ function renameActivity(id: string): void {
 }
 function deleteActivity(id: string): void {
   state.activities = state.activities.filter((a) => a.id !== id);
-  if (state.running && state.running.activityId === id) { state.running = null; stopTimerLoop(); }
+  state.runnings = state.runnings.filter((r) => r.activityId !== id);
+  clearArmed(id);
   save();
+  refreshRunning();
   render();
 }
 function setPlanned(id: string, val: string): void {
@@ -353,9 +401,11 @@ function importJSON(file: File): void {
       }));
       if (!confirm(`${activities.length}件の活動を読み込み、現在のデータを置き換えます。よろしいですか？`)) return;
       state.activities = activities;
-      state.running = null;
-      stopTimerLoop();
+      state.runnings = [];
+      armedCancels.forEach((t) => clearTimeout(t));
+      armedCancels.clear();
       save();
+      refreshRunning();
       render();
       toast("インポートしました");
     } catch (e) {
@@ -438,7 +488,7 @@ function render(): void {
     $(".rename", card).onclick = () => renameActivity(act.id);
 
     const startBtn = $<HTMLButtonElement>(".start", card);
-    startBtn.disabled = !!state.running;
+    startBtn.disabled = state.runnings.length > 0;
     startBtn.onclick = () => startActivity(act.id);
 
     $(".del", card).onclick = () => {
@@ -533,10 +583,18 @@ $("#addForm").addEventListener("submit", (e) => {
   addActivity(inp.value);
   inp.value = "";
 });
-$("#stopBtn").addEventListener("click", stopActivity);
-$("#cancelBtn").addEventListener("click", cancelActivity);
+$("#stopBtn").addEventListener("click", () => {
+  const r = state.runnings[0];
+  if (r) stopActivity(r.activityId);
+});
+$("#cancelBtn").addEventListener("click", () => {
+  const r = state.runnings[0];
+  if (r) cancelActivity(r.activityId);
+});
 $("#pauseBtn").addEventListener("click", () => {
-  if (state.running?.paused) resumeActivity(); else pauseActivity();
+  const r = state.runnings[0];
+  if (!r) return;
+  if (r.paused) resumeActivity(r.activityId); else pauseActivity(r.activityId);
 });
 $("#exportBtn").addEventListener("click", exportJSON);
 $("#importBtn").addEventListener("click", () => $("#importFile").click());
@@ -552,10 +610,7 @@ document.addEventListener("visibilitychange", () => {
 
 /* ---------- boot ---------- */
 render();
-if (state.running) {
-  if (state.running.paused) updateRunningBanner();
-  else startTimerLoop();
-}
+refreshRunning();
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
