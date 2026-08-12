@@ -103,26 +103,27 @@
     z-index: 40;
   }
   #runningBanner.show { display: flex; }
+  /* 行は常に縦積み。名前を小さなラベルとして上に置き、その下に時刻を大きく出し、
+     ボタンを最下段に並べる。画面幅で構造を変えないので、どの幅でも同じ形になる */
   .rb-row {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: stretch;
     gap: 8px;
     padding: 12px 18px;
   }
   .rb-row + .rb-row { border-top: 1px solid rgba(255,255,255,.22); }
   /* 一時停止中の行だけを暗くする。複数計測中に一時停止が混ざっても一目で見分けられるようにするため */
   .rb-row.paused { background: rgba(0,0,0,.22); }
-  /* 名前が長い行に押されてボタンが縮まないようにする。縮ませると縮み幅が名前の
-     長さで変わり、行ごとにボタンの寸法が変わってしまう（カード側の .head-actions と同じ理由） */
-  .rb-head { min-width: 0; }
-  #runningBanner .rb-name { font-weight: 600; font-size: 16px; }
-  #runningBanner .rb-time { font-size: 30px; font-variant-numeric: tabular-nums; letter-spacing: .02em; font-weight: 300; }
-  /* 2件以上を同時に計測しているときは、バナーが画面を覆わないよう行を詰める */
+  /* 時刻に視線を集めるため、名前は一段小さく暗いラベルとして時刻に従属させる */
+  #runningBanner .rb-name { font-weight: 600; font-size: 14px; color: rgba(255,255,255,.82); }
+  /* line-height は body の 1.5 のままだと 44px の行が 66px を占めてバナーが伸びすぎる */
+  #runningBanner .rb-time { font-size: 44px; line-height: 1.1; font-variant-numeric: tabular-nums; letter-spacing: .02em; font-weight: 300; }
+  /* 2件以上を同時に計測しているときは、バナーが画面を覆わないよう行を詰める。
+     時刻の大きさは視認性を優先して据え置く */
   #runningBanner.multi .rb-row { padding: 8px 18px; }
-  #runningBanner.multi .rb-time { font-size: 22px; }
   #runningBanner button { background: rgba(255,255,255,.22); color: #fff; white-space: nowrap; }
-  .rb-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .rb-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-shrink: 0; }
   /* 「やめる」は記録を残さない破棄なので、終了より控えめに従属させる */
   #runningBanner .rb-stop { background: #fff; color: var(--accent); font-weight: 600; }
   #runningBanner .rb-cancel { background: transparent; border: 1px solid rgba(255,255,255,.5); color: rgba(255,255,255,.92); font-size: 13px; padding: 8px 12px; }
@@ -131,13 +132,6 @@
      長い方の幅を下限にして、状態が変わっても寸法を保つ */
   #runningBanner .rb-pause { min-width: 88px; }
   #runningBanner .rb-pause.paused { background: #fff; color: var(--accent); font-weight: 600; }
-  /* 狭い画面ではボタン3つと名前を1行に並べる幅が無い。ボタンを下段に回し、
-     名前と時刻を同じ行に並べて、どの行も同じ形・同じボタン寸法になるようにする */
-  @media (max-width: 560px) {
-    .rb-row { flex-direction: column; align-items: stretch; gap: 8px; }
-    .rb-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-    .rb-actions { justify-content: flex-end; }
-  }
 
   /* add activity */
   .add-row { display: flex; gap: 8px; margin-bottom: 16px; }
