@@ -114,20 +114,29 @@ for (const k of await caches.keys()) await caches.delete(k);
 
 ブラウザのコンソールで次を実行する。バナー幅 288px は 320px 端末相当。
 
+**重要:** `.rb-cancel` の `click()` は `cancelActivity()` → `renderBanner()` を呼び、
+`banner.innerHTML = ""` で行を作り直す。クリック前に取得した要素参照は DOM から外れ、
+`getBoundingClientRect()` がすべて 0 を返すようになる。**押した後は必ず要素を取り直すこと。**
+
 ```js
 const banner = document.querySelector('#runningBanner');
 banner.style.width = '288px';
-const acts = document.querySelector('.rb-row .rb-actions');
-const before = acts.querySelector('.rb-cancel').getBoundingClientRect().width;
+// 押す前の実測
+const widthBefore = Math.round(document.querySelector('.rb-row .rb-cancel').getBoundingClientRect().width);
+const labelBefore = document.querySelector('.rb-row .rb-cancel').textContent;
 document.querySelector('.rb-row .rb-cancel').click();   // 1回だけ = armed
-await new Promise(r => setTimeout(r, 120));
+await new Promise(r => setTimeout(r, 150));
+// 行が作り直されているので、ここから取り直す
+const acts = document.querySelector('.rb-row .rb-actions');
+const cancel = acts.querySelector('.rb-cancel');
 const btns = [...acts.querySelectorAll('button')];
-const total = btns.reduce((s,b)=>s+b.getBoundingClientRect().width,0) + 8*(btns.length-1);
 const aR = acts.getBoundingClientRect();
+const total = btns.reduce((s,b)=>s+b.getBoundingClientRect().width,0) + 8*(btns.length-1);
 console.log(JSON.stringify({
-  label: acts.querySelector('.rb-cancel').textContent,
-  widthBefore: Math.round(before),
-  widthArmed: Math.round(acts.querySelector('.rb-cancel').getBoundingClientRect().width),
+  labelBefore,
+  labelArmed: cancel.textContent,
+  widthBefore,
+  widthArmed: Math.round(cancel.getBoundingClientRect().width),
   total: Math.round(total),
   available: Math.round(aR.width),
   overflowPx: Math.round(total) - Math.round(aR.width),
@@ -138,6 +147,8 @@ console.log(JSON.stringify({
 }, null, 2));
 banner.style.width = '';
 ```
+
+`click()` から測定完了までは 3 秒以内に収めること。3 秒で armed が自動解除される。
 
 Expected:
 - `label` が `"破棄？"`

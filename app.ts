@@ -211,7 +211,7 @@ function renderBanner(): void {
         <div class="rb-time">00:00</div>
       </div>
       <div class="rb-actions">
-        <button class="rb-cancel${armed ? " armed" : ""}">${armed ? "本当にやめる？" : "やめる"}</button>
+        <button class="rb-cancel${armed ? " armed" : ""}">${armed ? "破棄？" : "やめる"}</button>
         <button class="rb-pause${r.paused ? " paused" : ""}">${r.paused ? "再開" : "一時停止"}</button>
         <button class="rb-stop">終了</button>
       </div>
@@ -233,7 +233,7 @@ function renderBanner(): void {
 }
 
 // 毎秒呼ばれる。各行の経過時間のテキストだけを更新し、DOM 構造やクラスには触らない。
-// 行を作り直すと「本当にやめる？」の armed 表示やフォーカスが1秒で失われるため分けている
+// 行を作り直すと「破棄？」の armed 表示やフォーカスが1秒で失われるため分けている
 function tickBanner(): void {
   const rows = document.querySelectorAll<HTMLElement>("#runningBanner .rb-row");
   rows.forEach((row) => {
