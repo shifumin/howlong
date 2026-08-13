@@ -101,6 +101,11 @@
     align-items: stretch;
     box-shadow: 0 8px 28px rgba(0,0,0,.32);
     z-index: 40;
+    /* 時刻を全幅まで拡大したぶん行が高い。想定する最大2件では収まるが、それを超えて
+       積み上がると行の合計が画面高を超え、bottom 固定のため上端の行が画面外に出て
+       操作できなくなる。上限を切ってスクロールさせる保険 */
+    max-height: calc(100dvh - env(safe-area-inset-top) - 24px);
+    overflow-y: auto;
   }
   #runningBanner.show { display: flex; }
   /* 行は常に縦積み。名前を小さなラベルとして上に置き、その下に時刻を大きく出し、
@@ -111,14 +116,27 @@
     align-items: stretch;
     gap: 8px;
     padding: 12px 18px;
+    /* 時刻のフォントサイズを行の内容幅に比例させるための基準。vw だと body の
+       max-width:640px を無視して大画面ではみ出すため、コンテナ幅を使う */
+    container-type: inline-size;
   }
   .rb-row + .rb-row { border-top: 1px solid rgba(255,255,255,.22); }
   /* 一時停止中の行だけを暗くする。複数計測中に一時停止が混ざっても一目で見分けられるようにするため */
   .rb-row.paused { background: rgba(0,0,0,.22); }
   /* 時刻に視線を集めるため、名前は一段小さく暗いラベルとして時刻に従属させる */
   #runningBanner .rb-name { font-weight: 600; font-size: 14px; color: rgba(255,255,255,.82); }
-  /* line-height は body の 1.5 のままだと 44px の行が 66px を占めてバナーが伸びすぎる */
-  #runningBanner .rb-time { font-size: 44px; line-height: 1.1; font-variant-numeric: tabular-nums; letter-spacing: .02em; font-weight: 300; }
+  /* 時刻は行の内容幅いっぱいまで拡大する。23cqw は "00:00:00"（等幅数字6+コロン2）が
+     実測で収まる上限 24.1cqw に安全マージンを取った値。大画面では 104px で頭打ちにする。
+     line-height は body の 1.5 のままだと行が 1.5 倍を占めてバナーが伸びすぎる */
+  #runningBanner .rb-time {
+    font-size: min(23cqw, 104px);
+    line-height: 1.02;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .02em;
+    /* この寸法だと 300 は太く見える。細い方が数字の輪郭が締まる */
+    font-weight: 200;
+    text-align: center;
+  }
   /* 2件以上を同時に計測しているときは、バナーが画面を覆わないよう行を詰める。
      時刻の大きさは視認性を優先して据え置く */
   #runningBanner.multi .rb-row { padding: 8px 18px; }

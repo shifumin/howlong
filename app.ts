@@ -179,14 +179,16 @@ function elapsedMs(running: Running): number {
   return running.paused ? running.accumulatedMs : running.accumulatedMs + (Date.now() - running.start);
 }
 
-// 経過ミリ秒を "MM:SS"（1時間以上は "H:MM:SS"）に整形する
+// 経過ミリ秒を常に "HH:MM:SS" に整形する。1時間未満でも時を省かず、時も2桁に
+// 揃えるのは、バナーの時刻を幅いっぱいまで拡大しているため。桁数が変わると
+// フォントサイズと字の位置が 1 時間ちょうど・10 時間ちょうどで跳ぶ
 function fmtElapsed(ms: number): string {
   const sec = Math.max(0, Math.floor(ms / 1000));
   const h = Math.floor(sec / 3600);
   const m = Math.floor((sec % 3600) / 60);
   const s = sec % 60;
   const p = (n: number) => String(n).padStart(2, "0");
-  return h > 0 ? `${h}:${p(m)}:${p(s)}` : `${p(m)}:${p(s)}`;
+  return `${p(h)}:${p(m)}:${p(s)}`;
 }
 
 // バナーの行を作り直す。開始・終了・やめる・一時停止・再開のたびに呼ぶ（毎秒は呼ばない）
@@ -208,7 +210,7 @@ function renderBanner(): void {
     row.innerHTML = `
       <div class="rb-head">
         <div class="rb-name"></div>
-        <div class="rb-time">00:00</div>
+        <div class="rb-time">00:00:00</div>
       </div>
       <div class="rb-actions">
         <button class="rb-cancel${armed ? " armed" : ""}">${armed ? "破棄？" : "やめる"}</button>
