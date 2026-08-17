@@ -96,3 +96,5 @@ gh release edit v1.3.2 --notes-file notes.md
 | `.github/workflows/deploy.yml` | CI: compiles `app.ts`, publishes to Pages. |
 | `.github/workflows/release.yml` | CI: tags and releases when `package.json` `version` has no tag. |
 | `docs/superpowers/specs/` | Design docs for shipped features (the *why* behind decisions the code doesn't explain). |
+| `docs/superpowers/plans/` | Implementation plans for shipped features (kept as a record of how the work was split). |
+| `docs/screenshot*.png` | README screenshots (iPhone 14 Pro Max, 430x932 @2x, light mode). |

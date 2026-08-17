@@ -47,7 +47,7 @@ All time values are in **minutes**.
 - PWA: `index.html` (inline CSS) + `app.js` (compiled from `app.ts`)
 - Language: **TypeScript** (`strict` mode), compiled with `tsc` — no bundler, no runtime dependencies
 - Storage: `localStorage` (device-local; data is never sent anywhere)
-- `manifest.json` + `sw.js` (Service Worker, network-first HTML) for "Add to Home Screen" and offline launch
+- `manifest.json` + `sw.js` (Service Worker: network-first `index.html` + `app.js`, cache-first shell) for "Add to Home Screen" and offline launch
 - CI/CD: GitHub Actions builds and deploys to GitHub Pages (`.github/workflows/deploy.yml`)
 
 ## Development
