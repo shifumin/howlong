@@ -7,8 +7,10 @@ activity (bath, dinner, …) with one tap, see the average / median time at a gl
 and set a planned time to aim for.
 
 <p align="center">
-  <img src="docs/screenshot.png" alt="howlong running on iPhone" width="300"><br>
-  <em>Record how long everyday activities take — see the average &amp; median at a glance.</em>
+  <img src="docs/screenshot.png" alt="howlong timing one activity on iPhone" width="290">
+  <img src="docs/screenshot-parallel.png" alt="howlong timing two activities at the same time" width="290"><br>
+  <em>Record how long everyday activities take — see the average &amp; median at a glance.<br>
+  Left: one activity being timed. Right: two at once, each timer with its own row.</em>
 </p>
 
 No server. The app is a single `index.html` (inline CSS) plus one script
@@ -19,13 +21,18 @@ No server. The app is a single `index.html` (inline CSS) plus one script
 - **Activities** — add an activity once, reuse it from then on
 - **Reorder, rename & delete** — move activities up/down with ▲▼ buttons (works on
   iPhone touch), rename or delete them; the display order is saved
-- **Start / Stop timer** — one running activity at a time (exclusive). A live timer
-  shows the elapsed time; closing the tab does not reset it (the start time is kept
-  in `localStorage` so measurement continues)
+- **Start / Stop timer** — a live `HH:MM:SS` timer in a banner pinned to the bottom
+  of the screen, scaled to fill the row width so it stays readable from across the
+  room; closing the tab does not reset it (the start time is kept in `localStorage`
+  so measurement continues)
+- **Several timers at once** — time as many activities in parallel as you like
+  (dinner while the bath is running); each one gets its own row in the banner with
+  its own pause / discard / stop buttons. One timer per activity
 - **Pause / Resume** — pause a running timer and resume it later; time spent paused
-  is excluded from the recorded duration, and the paused state survives closing the tab
-- **Cancel** — discard a running measurement without recording it; the button asks
-  for a second tap to confirm, so a mis-tap costs nothing
+  is excluded from the recorded duration, and the paused state survives closing the
+  tab. A paused row is dimmed, so it stands out among running ones
+- **Cancel** — discard a running measurement without recording it; the button turns
+  into a red **破棄？** that needs a second tap to confirm, so a mis-tap costs nothing
 - **Statistics** — per activity: average, median, count, and latest, computed automatically
 - **Planned time** — set a planned duration per activity; when the average exceeds it,
   the value is highlighted in red (no notifications)
@@ -78,11 +85,11 @@ This is what **export** writes and **import** accepts:
 The order of the `activities` array is the display order (the ▲▼ buttons reorder
 the array; there is no separate order field).
 
-`localStorage` keeps the same object plus a `running` entry while a measurement
-is in progress: `activityId`, `firstStart` (when the timer was first started),
-`start` (when the current segment started), `accumulatedMs` (time already run)
-and `paused`. That is what lets a running — or paused — timer survive closing
-the tab. It is not part of the export.
+`localStorage` keeps the same object plus a `runnings` array — one entry per
+measurement in progress: `activityId`, `firstStart` (when the timer was first
+started), `start` (when the current segment started), `accumulatedMs` (time
+already run) and `paused`. That is what lets running — or paused — timers
+survive closing the tab. It is not part of the export.
 
 Records data stays in `localStorage` on the device only. iOS may rarely clear
 `localStorage`, so **JSON export is the backup mechanism**.
