@@ -16,6 +16,10 @@ and set a planned time to aim for.
 No server. The app is a single `index.html` (inline CSS) plus one script
 (`app.js`) that stores everything in the browser's `localStorage` on your device.
 
+**The interface is in Japanese.** The feature names below are English descriptions;
+the buttons themselves read 開始 (start), 一時停止 (pause), 再開 (resume),
+やめる (cancel) and 終了 (stop).
+
 ## Features
 
 - **Activities** — add an activity once, reuse it from then on
@@ -38,9 +42,13 @@ No server. The app is a single `index.html` (inline CSS) plus one script
   the value is highlighted in red (no notifications)
 - **History** — a tidy, stats-first view by default; expand to see every record, and
   edit / delete / manually add records (for missed or mistaken taps)
-- **JSON export / import** — back up or restore all data as a dated JSON file
+- **JSON export / import** — back up all data as a dated JSON file
+  (`howlong-YYYYMMDD.json`). Importing is a **restore, not a merge**: it replaces
+  every activity and record currently stored, and stops any running timer. It asks
+  for confirmation before doing so
 
-All time values are in **minutes**.
+All time values are in **minutes**, rounded to the nearest minute with a
+**1-minute minimum** — stopping a timer after 20 seconds records 1 minute, not 0.
 
 ## Tech
 
