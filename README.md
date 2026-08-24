@@ -60,7 +60,7 @@ All time values are in **minutes**, rounded to the nearest minute with a
 
 ## Development
 
-Requires Node.js (CI builds on 24).
+Requires Node.js (see `.github/workflows/deploy.yml` for the version CI builds on).
 
 ```bash
 npm install        # install TypeScript (dev dependency)
